@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cambridge Movers - Vocabulary Quiz</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Quicksand', sans-serif;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f0f7f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 600px;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+            border: 6px solid #bce1cd;
+            padding: 24px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            margin: 15px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .level-badge {
+            font-family: 'Fredoka One', cursive;
+            background-color: #ff9f43;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 14pt;
+            box-shadow: 0 4px 0 #d35400;
+        }
+
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            color: #555;
+        }
+
+        .progress-bar-bg {
+            width: 120px;
+            height: 14px;
+            background-color: #e2ecc8;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #ccd9aa;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background-color: #2ed573;
+            transition: width 0.3s ease;
+        }
+
+        /* 這裡將整塊提示與答案生字的框框隱藏起來 */
+        .target-word-box {
+            display: none;
+        }
+
+        .target-word {
+            font-family: 'Fredoka One', cursive;
+            font-size: 24pt;
+            color: #2c3e50;
+            margin: 0;
+            letter-spacing: 1px;
+        }
+
+        /* Image viewport */
+        .image-viewport {
+            width: 100%;
+            height: 240px;
+            background-color: #fbfbfc;
+            border: 4px solid #dfe6e9;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.02);
+            padding: 10px;
+            margin-top: 10px; /* 增加頂部間距，補償隱藏提示框後的空間 */
+        }
+
+        /* Image styling to fit perfectly inside the viewport */
+        .image-viewport img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 12px;
+        }
+
+        /* Option buttons layout */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .btn-option {
+            background-color: #ffffff;
+            border: 3px solid #dfe6e9;
+            border-bottom: 7px solid #dfe6e9;
+            border-radius: 16px;
+            padding: 14px 20px;
+            font-size: 16pt;
+            font-weight: 700;
+            color: #2d3436;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            outline: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn-option:hover {
+            background-color: #f9f9f9;
+            border-color: #b2bec3;
+        }
+
+        .btn-option:active {
+            transform: translateY(4px);
+            border-bottom-width: 3px;
+        }
+
+        /* Feedback states */
+        .btn-option.correct {
+            background-color: #2ed573 !important;
+            border-color: #26af5f !important;
+            border-bottom-color: #1b8a47 !important;
+            color: white !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+
+        .btn-option.wrong {
+            background-color: #ff4757 !important;
+            border-color: #ff2238 !important;
+            border-bottom-color: #b31020 !important;
+            color: white !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+
+        /* Score overlay screen */
+        .overlay-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.98);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            z-index: 10;
+        }
+
+        .overlay-title {
+            font-family: 'Fredoka One', cursive;
+            font-size: 28pt;
+            color: #ff9f43;
+            margin-bottom: 10px;
+        }
+
+        .overlay-score {
+            font-size: 40pt;
+            font-weight: 700;
+            color: #2ed573;
+            margin-bottom: 30px;
+        }
+
+        .btn-restart {
+            font-family: 'Fredoka One', cursive;
+            background-color: #2ed573;
+            color: white;
+            border: none;
+            border-bottom: 6px solid #1b8a47;
+            padding: 14px 40px;
+            font-size: 18pt;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 8px 15px rgba(46, 213, 115, 0.3);
+            transition: all 0.1s ease;
+        }
+
+        .btn-restart:active {
+            transform: translateY(4px);
+            border-bottom-width: 2px;
+            box-shadow: 0 4px 8px rgba(46, 213, 115, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <!-- Header -->
+        <div class="header">
+            <span class="level-badge">Movers</span>
+            <div class="progress-container">
+                <div class="progress-bar-bg">
+                    <div id="progressBar" class="progress-bar-fill"></div>
+                </div>
+                <span id="progressText">1/13</span>
+            </div>
+        </div>
+
+        <!-- Target Word Prompt (已在 CSS 被隱藏) -->
+        <div class="target-word-box">
+            <p style="margin: 0 0 4px 0; font-size: 10pt; color: #7f8c8d; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;">Match the picture to the word:</p>
+            <h2 id="targetWord" class="target-word">beard</h2>
+        </div>
+
+        <!-- Image Container -->
+        <div class="image-viewport" id="imageViewport">
+            <!-- Images will be loaded here dynamically -->
+        </div>
+
+        <!-- Multiple Choice Options -->
+        <div class="options-grid" id="optionsContainer">
+            <button class="btn-option" onclick="checkAnswer(this)">Option 1</button>
+            <button class="btn-option" onclick="checkAnswer(this)">Option 2</button>
+            <button class="btn-option" onclick="checkAnswer(this)">Option 3</button>
+        </div>
+
+        <!-- End Screen Overlay -->
+        <div class="overlay-screen" id="endScreen">
+            <h2 class="overlay-title">Well Done! 🎉</h2>
+            <p style="font-size: 14pt; color: #7f8c8d; margin: 0 0 10px 0; font-weight: bold;">You completed the quiz!</p>
+            <div class="overlay-score" id="finalScore">13 / 13</div>
+            <button class="btn-restart" onclick="restartQuiz()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const vocabulary = [
+            { word: "beard", options: ["beard", "moustache", "neck"] },
+            { word: "moustache", options: ["moustache", "beard", "stomach"] },
+            { word: "blond(e)", options: ["blond(e)", "fair", "curly"] },
+            { word: "curly", options: ["curly", "blond(e)", "thin"] },
+            { word: "fair", options: ["fair", "blond(e)", "fat"] },
+            { word: "fat", options: ["fat", "thin", "shoulder"] },
+            { word: "thin", options: ["thin", "fat", "back"] },
+            { word: "back", options: ["back", "neck", "stomach"] },
+            { word: "neck", options: ["neck", "shoulder", "tooth"] },
+            { word: "shoulder", options: ["shoulder", "neck", "back"] },
+            { word: "stomach", options: ["stomach", "neck", "teeth"] },
+            { word: "tooth", options: ["tooth", "teeth", "curly"] },
+            { word: "teeth", options: ["teeth", "tooth", "moustache"] }
+        ];
+
+        let currentIndex = 0;
+        let score = 0;
+        let hasAnswered = false;
+
+        // Helper function to get correct image filename
+        function getImagePath(word) {
+            const filename = word.replace(/[()]/g, "");
+            return `images/${filename}.png`;
+        }
+
+        function loadQuestion() {
+            hasAnswered = false;
+            const currentItem = vocabulary[currentIndex];
+
+            // Progress Update
+            document.getElementById("progressText").textContent = `${currentIndex + 1} / ${vocabulary.length}`;
+            document.getElementById("progressBar").style.width = `${((currentIndex) / vocabulary.length) * 100}%`;
+
+            // Setup Question Header (即使隱藏也會更新，讓 JS 順利核對答案)
+            document.getElementById("targetWord").textContent = currentItem.word;
+
+            // Render Image from FOLDER
+            const viewport = document.getElementById("imageViewport");
+            const imgSrc = getImagePath(currentItem.word);
+            viewport.innerHTML = `<img src="${imgSrc}" alt="${currentItem.word}" onerror="this.style.display='none'; this.parentNode.innerHTML='<div style=\'font-weight:bold;color:#aaa;\'>Image Not Found</div>'">`;
+
+            // Shuffle Option Orders
+            const shuffledOptions = [...currentItem.options].sort(() => Math.random() - 0.5);
+            
+            // Render Option Buttons
+            const optionsContainer = document.getElementById("optionsContainer");
+            optionsContainer.innerHTML = "";
+            shuffledOptions.forEach(opt => {
+                const btn = document.createElement("button");
+                btn.className = "btn-option";
+                btn.textContent = opt;
+                btn.onclick = () => checkAnswer(btn, opt);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedButton, chosenWord) {
+            if (hasAnswered) return;
+            hasAnswered = true;
+
+            const correctWord = vocabulary[currentIndex].word;
+            const buttons = document.querySelectorAll(".btn-option");
+
+            if (chosenWord === correctWord) {
+                selectedButton.classList.add("correct");
+                score++;
+            } else {
+                selectedButton.classList.add("wrong");
+                // Highlight correct one
+                buttons.forEach(btn => {
+                    if (btn.textContent === correctWord) {
+                        btn.classList.add("correct");
+                    }
+                });
+            }
+
+            // Wait 1.5 seconds before loading next question
+            setTimeout(() => {
+                currentIndex++;
+                if (currentIndex < vocabulary.length) {
+                    loadQuestion();
+                } else {
+                    showEndScreen();
+                }
+            }, 1500);
+        }
+
+        function showEndScreen() {
+            document.getElementById("progressBar").style.width = "100%";
+            document.getElementById("endScreen").style.display = "flex";
+            document.getElementById("finalScore").textContent = `${score} / ${vocabulary.length}`;
+        }
+
+        function restartQuiz() {
+            currentIndex = 0;
+            score = 0;
+            document.getElementById("endScreen").style.display = "none";
+            // Reshuffle the sequence of vocabulary for fun replay value
+            vocabulary.sort(() => Math.random() - 0.5);
+            loadQuestion();
+        }
+
+        // Initialize game
+        window.onload = () => {
+            vocabulary.sort(() => Math.random() - 0.5);
+            loadQuestion();
+        };
+    </script>
+</body>
+</html>
