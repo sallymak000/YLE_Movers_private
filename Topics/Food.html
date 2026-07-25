@@ -80,7 +80,7 @@
             transition: width 0.3s ease;
         }
 
-        /* 隱藏文字提示框 */
+        /* 隱藏提示與答案生字的框框 */
         .target-word-box {
             display: none;
         }
@@ -93,6 +93,7 @@
             letter-spacing: 1px;
         }
 
+        /* Image viewport */
         .image-viewport {
             width: 100%;
             height: 240px;
@@ -110,6 +111,7 @@
             margin-top: 10px;
         }
 
+        /* Image styling to fit perfectly inside the viewport */
         .image-viewport img {
             max-width: 100%;
             max-height: 100%;
@@ -117,6 +119,7 @@
             border-radius: 12px;
         }
 
+        /* Option buttons layout */
         .options-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -151,6 +154,7 @@
             border-bottom-width: 3px;
         }
 
+        /* Feedback states */
         .btn-option.correct {
             background-color: #2ed573 !important;
             border-color: #26af5f !important;
@@ -167,6 +171,7 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.15);
         }
 
+        /* Score overlay screen */
         .overlay-screen {
             position: absolute;
             top: 0;
@@ -220,69 +225,98 @@
 <body>
 
     <div class="game-container">
+        <!-- Header -->
         <div class="header">
             <span class="level-badge">Movers</span>
             <div class="progress-container">
                 <div class="progress-bar-bg">
                     <div id="progressBar" class="progress-bar-fill"></div>
                 </div>
-                <span id="progressText">1/18</span>
+                <span id="progressText">1/20</span>
             </div>
         </div>
 
+        <!-- Target Word Prompt (已在 CSS 被隱藏) -->
         <div class="target-word-box">
-            <h2 id="targetWord" class="target-word">cold</h2>
+            <p style="margin: 0 0 4px 0; font-size: 10pt; color: #7f8c8d; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;">Match the picture to the word:</p>
+            <h2 id="targetWord" class="target-word">cheese</h2>
         </div>
 
-        <div class="image-viewport" id="imageViewport"></div>
+        <!-- Image Container -->
+        <div class="image-viewport" id="imageViewport">
+            <!-- Images will be loaded here dynamically -->
+        </div>
 
-        <div class="options-grid" id="optionsContainer"></div>
+        <!-- Multiple Choice Options -->
+        <div class="options-grid" id="optionsContainer">
+            <button class="btn-option" onclick="checkAnswer(this)">Option 1</button>
+            <button class="btn-option" onclick="checkAnswer(this)">Option 2</button>
+            <button class="btn-option" onclick="checkAnswer(this)">Option 3</button>
+        </div>
 
+        <!-- End Screen Overlay -->
         <div class="overlay-screen" id="endScreen">
             <h2 class="overlay-title">Well Done! 🎉</h2>
-            <div class="overlay-score" id="finalScore">18 / 18</div>
+            <p style="font-size: 14pt; color: #7f8c8d; margin: 0 0 10px 0; font-weight: bold;">You completed the quiz!</p>
+            <div class="overlay-score" id="finalScore">20 / 20</div>
             <button class="btn-restart" onclick="restartQuiz()">Play Again</button>
         </div>
     </div>
 
     <script>
+        // 更新後的 Movers 食物與餐具生字清單，並自動配好混淆選項
         const vocabulary = [
-            { word: "cold", options: ["cold", "cough", "tired"] },
-            { word: "cough", options: ["cough", "cold", "cry"] },
-            { word: "cry", options: ["cry", "tired", "sick"] },
-            { word: "earache", options: ["earache", "headache", "toothache"] },
-            { word: "fall", options: ["fall", "sick", "ill"] },
-            { word: "headache", options: ["headache", "earache", "stomachache"] },
-            { word: "hospital", options: ["hospital", "doctor", "nurse"] },
-            { word: "fine", options: ["fine", "ill", "sick"] },
-            { word: "stomachache", options: ["stomachache", "headache", "earache"] },
-            { word: "temperature", options: ["temperature", "cold", "cough"] },
-            { word: "tired", options: ["tired", "sick", "cry"] },
-            { word: "toothache", options: ["toothache", "earache", "headache"] },
-            { word: "ill", options: ["ill", "sick", "fine"] },
-            { word: "sick", options: ["sick", "ill", "fine"] },
-            { word: "dentist", options: ["dentist", "doctor", "nurse"] },
-            { word: "doctor", options: ["doctor", "nurse", "dentist"] },
-            { word: "nurse", options: ["nurse", "doctor", "dentist"] },
-            { word: "matter", options: ["matter", "fine", "sick"] }
+            { word: "cheese", options: ["cheese", "pancake", "sandwich"] },
+            { word: "noodles", options: ["noodles", "pasta", "soup"] },
+            { word: "pancake", options: ["pancake", "cheese", "plate"] },
+            { word: "pasta", options: ["pasta", "noodles", "salad"] },
+            { word: "sauce", options: ["sauce", "soup", "salad"] },
+            { word: "salad", options: ["salad", "vegetable", "pasta"] },
+            { word: "sandwich", options: ["sandwich", "cheese", "picnic"] },
+            { word: "soup", options: ["soup", "sauce", "bowl"] },
+            { word: "vegetable", options: ["vegetable", "salad", "hungry"] },
+            { word: "coffee", options: ["coffee", "tea", "milkshake"] },
+            { word: "milkshake", options: ["milkshake", "coffee", "glass"] },
+            { word: "tea", options: ["tea", "coffee", "cup"] },
+            { word: "bottle", options: ["bottle", "glass", "cup"] },
+            { word: "bowl", options: ["bowl", "plate", "soup"] },
+            { word: "cup", options: ["cup", "glass", "tea"] },
+            { word: "glass", options: ["glass", "bottle", "milkshake"] },
+            { word: "plate", options: ["plate", "bowl", "pancake"] },
+            { word: "picnic", options: ["picnic", "sandwich", "hungry"] },
+            { word: "hungry", options: ["hungry", "thirsty", "vegetable"] },
+            { word: "thirsty", options: ["thirsty", "hungry", "glass"] }
         ];
 
         let currentIndex = 0;
         let score = 0;
         let hasAnswered = false;
 
-        function getImagePath(word) { return `images/${word}.png`; }
+        // 取得圖片檔名路徑
+        function getImagePath(word) {
+            return `images/${word}.png`;
+        }
 
         function loadQuestion() {
             hasAnswered = false;
             const currentItem = vocabulary[currentIndex];
+
+            // 更新進度條文字
             document.getElementById("progressText").textContent = `${currentIndex + 1} / ${vocabulary.length}`;
             document.getElementById("progressBar").style.width = `${((currentIndex) / vocabulary.length) * 100}%`;
+
+            // 設定目標生字 (後台比對答案用)
             document.getElementById("targetWord").textContent = currentItem.word;
+
+            // 讀取對應的 PNG 圖片
             const viewport = document.getElementById("imageViewport");
-            viewport.innerHTML = `<img src="${getImagePath(currentItem.word)}" alt="${currentItem.word}" onerror="this.style.display='none'; this.parentNode.innerHTML='<div style=\'font-weight:bold;color:#aaa;\'>Image Not Found</div>'">`;
-            
+            const imgSrc = getImagePath(currentItem.word);
+            viewport.innerHTML = `<img src="${imgSrc}" alt="${currentItem.word}" onerror="this.style.display='none'; this.parentNode.innerHTML='<div style=\'font-weight:bold;color:#aaa;\'>Image Not Found</div>'">`;
+
+            // 隨機打亂選項順序
             const shuffledOptions = [...currentItem.options].sort(() => Math.random() - 0.5);
+            
+            // 渲染按鈕
             const optionsContainer = document.getElementById("optionsContainer");
             optionsContainer.innerHTML = "";
             shuffledOptions.forEach(opt => {
@@ -297,20 +331,31 @@
         function checkAnswer(selectedButton, chosenWord) {
             if (hasAnswered) return;
             hasAnswered = true;
+
             const correctWord = vocabulary[currentIndex].word;
+            const buttons = document.querySelectorAll(".btn-option");
+
             if (chosenWord === correctWord) {
                 selectedButton.classList.add("correct");
                 score++;
             } else {
                 selectedButton.classList.add("wrong");
-                document.querySelectorAll(".btn-option").forEach(btn => {
-                    if (btn.textContent === correctWord) btn.classList.add("correct");
+                // 答錯時高亮顯示正確答案
+                buttons.forEach(btn => {
+                    if (btn.textContent === correctWord) {
+                        btn.classList.add("correct");
+                    }
                 });
             }
+
+            // 答完後等 1.5 秒自動進入下一題
             setTimeout(() => {
                 currentIndex++;
-                if (currentIndex < vocabulary.length) loadQuestion();
-                else showEndScreen();
+                if (currentIndex < vocabulary.length) {
+                    loadQuestion();
+                } else {
+                    showEndScreen();
+                }
             }, 1500);
         }
 
@@ -324,10 +369,12 @@
             currentIndex = 0;
             score = 0;
             document.getElementById("endScreen").style.display = "none";
+            // 重新洗牌單字順序增加耐玩度
             vocabulary.sort(() => Math.random() - 0.5);
             loadQuestion();
         }
 
+        // 初始化遊戲並洗牌
         window.onload = () => {
             vocabulary.sort(() => Math.random() - 0.5);
             loadQuestion();
