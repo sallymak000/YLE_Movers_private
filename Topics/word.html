@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#FF8C42">
+  <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22%E8%AA%8D%E5%AD%97%E5%B0%8F%E8%8B%B1%E9%9B%84%22%2C%22short_name%22%3A%22%E8%AA%8D%E5%AD%97%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23FFF8F0%22%2C%22theme_color%22%3A%22%23FF8C42%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%3Bcharset%3Dutf-8%2C%253Csvg%2520xmlns%253D%2527http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2527%2520viewBox%253D%25270%25200%2520100%2520100%2527%253E%253Crect%2520width%253D%2527100%2527%2520height%253D%2527100%2527%2520fill%253D%2527%2523FF8C42%2527%252Frx%253D%252720%2527%252F%253E%253Ctext%2520x%253D%252750%2527%2520y%253D%252770%2527%2520font-size%253D%252760%2527%2520text-anchor%253D%2527middle%2527%2520fill%253D%2527white%2527%253E%E5%AD%97%253C%252Ftext%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23FF8C42%22 rx=%2220%22/%3E%3Ctext x=%2250%22 y=%2270%22 font-size=%2260%22 text-anchor=%22middle%22 fill=%22white%22%3E字%3C/text%3E%3C/svg%3E">
+  <title>認字小英雄</title>
+  <!-- 純系統字體,避免網絡被擋 -->
+<style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    :root {
+      --kai: 'DFKai-SB', 'BiauKai', '標楷體', 'STKaiti', 'Kaiti TC', 'KaiTi', '楷體', 'AR PL UKai CN', 'AR PL UKai', 'AR PL UMing CN', 'PMingLiU', 'MingLiU', 'PingFang TC', 'Heiti TC', 'Microsoft JhengHei', 'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
+      --primary: #FF8C42;
+      --primary-dark: #F4731F;
+      --primary-light: #FFB87A;
+      --success: #10B981;
+      --success-dark: #059669;
+      --wrong: #EF4444;
+      --wrong-dark: #DC2626;
+      --bg: #FFF8F0;
+      --bg-grad-1: #FFE8D0;
+      --bg-grad-2: #FFF8F0;
+      --card: #FFFFFF;
+      --text: #1F2937;
+      --text-light: #6B7280;
+      --border: rgba(0,0,0,0.06);
+      --shadow: 0 4px 24px rgba(0,0,0,0.08);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+    }
+
+    html, body {
+      font-family: var(--kai);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow: hidden;
+      position: fixed;
+      inset: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background: linear-gradient(160deg, var(--bg-grad-1) 0%, var(--bg-grad-2) 60%);
+    }
+
+    #app {
+      max-width: 480px;
+      margin: 0 auto;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      padding: 0 16px;
+      padding-top: env(safe-area-inset-top, 0);
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    .screen {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .screen.active {
+      display: flex;
+    }
+
+    /* ====== Home ====== */
+    .home-header {
+      text-align: center;
+      padding: 32px 0 20px;
+    }
+    .home-emoji {
+      font-size: 56px;
+      margin-bottom: 8px;
+      display: inline-block;
+      animation: bounce 2s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .home-title {
+      font-size: 32px;
+      font-weight: 400;
+      color: var(--primary);
+      letter-spacing: 1px;
+    }
+    .home-subtitle {
+      font-size: 14px;
+      color: var(--text-light);
+      margin-top: 4px;
+    }
+
+    .home-stats {
+      display: flex;
+      gap: 12px;
+      margin: 16px 0 24px;
+    }
+    .stat-card {
+      background: var(--card);
+      border-radius: 18px;
+      padding: 14px;
+      flex: 1;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    .stat-num {
+      font-size: 26px;
+      font-weight: 400;
+      color: var(--primary);
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-light);
+      margin-top: 4px;
+    }
+    .stat-sub {
+      font-size: 10px;
+      color: var(--text-light);
+      margin-top: 2px;
+      opacity: 0.7;
+    }
+
+    .mode-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .mode-btn {
+      background: var(--card);
+      border: none;
+      border-radius: 22px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      text-align: left;
+      transition: transform 0.12s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .mode-btn:active {
+      transform: scale(0.97);
+    }
+    .mode-btn::after {
+      content: '›';
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 28px;
+      color: var(--text-light);
+      opacity: 0.5;
+    }
+    .mode-icon {
+      font-size: 32px;
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .mode-icon.lesson { background: linear-gradient(135deg, #FFE4B5, #FFD699); }
+    .mode-icon.all    { background: linear-gradient(135deg, #B5E4FF, #99D4FF); }
+    .mode-icon.wrong  { background: linear-gradient(135deg, #FFB5D5, #FF99C4); }
+    .mode-text { flex: 1; }
+    .mode-title {
+      font-size: 19px;
+      font-weight: 400;
+      color: var(--text);
+    }
+    .mode-desc {
+      font-size: 13px;
+      color: var(--text-light);
+      margin-top: 2px;
+    }
+    .mode-badge {
+      display: inline-block;
+      background: var(--primary);
+      color: white;
+      font-size: 11px;
+      font-weight: 400;
+      padding: 2px 8px;
+      border-radius: 8px;
+      margin-left: 6px;
+    }
+
+    .home-footer {
+      text-align: center;
+      padding: 16px 0;
+      font-size: 12px;
+      color: var(--text-light);
+    }
+    .clear-btn {
+      background: none;
+      border: none;
+      color: var(--wrong);
+      font-size: 13px;
+      text-decoration: underline;
+      cursor: pointer;
+      padding: 4px 8px;
+    }
+
+    /* ====== Top bar ====== */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0 16px;
+      flex-shrink: 0;
+    }
+    .back-btn {
+      background: var(--card);
+      border: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      font-size: 22px;
+      font-weight: 400;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text);
+      flex-shrink: 0;
+    }
+    .back-btn:active { transform: scale(0.95); }
+    .topbar-title {
+      font-size: 19px;
+      font-weight: 400;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .progress-text {
+      font-size: 14px;
+      color: var(--text);
+      background: var(--card);
+      padding: 10px 14px;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      font-weight: 400;
+      flex-shrink: 0;
+    }
+
+    /* ====== Lesson grid ====== */
+    .lesson-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 4px 0 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .lesson-card {
+      background: var(--card);
+      border: none;
+      border-radius: 16px;
+      padding: 14px 6px;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: transform 0.12s;
+      text-align: center;
+    }
+    .lesson-card:active { transform: scale(0.94); }
+    .lesson-num {
+      font-size: 11px;
+      color: var(--text-light);
+    }
+    .lesson-label {
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--primary);
+      margin-top: 2px;
+      line-height: 1.1;
+    }
+    .lesson-count {
+      font-size: 11px;
+      color: var(--text-light);
+      margin-top: 4px;
+    }
+    .book-tag {
+      display: inline-block;
+      font-size: 10px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      margin-left: 2px;
+      vertical-align: middle;
+    }
+    .book-tag.b3 { background: #FFE4B5; color: #B85C00; }
+    .book-tag.b4 { background: #B5E4FF; color: #0066B8; }
+
+    /* ====== Game screen ====== */
+    .game-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 0 16px;
+      min-height: 0;
+    }
+    .character-card {
+      width: min(100%, 320px);
+      aspect-ratio: 1;
+      background: var(--card);
+      border-radius: 32px;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .character-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,140,66,0.04), rgba(255,184,122,0.12));
+    }
+    .character-card::after {
+      content: '';
+      position: absolute;
+      inset: 12px;
+      border: 2px dashed rgba(255,140,66,0.2);
+      border-radius: 24px;
+      pointer-events: none;
+    }
+    .character {
+      font-family: var(--kai);
+      font-size: clamp(140px, 38vw, 200px);
+      font-weight: 400;
+      color: var(--text);
+      position: relative;
+      z-index: 1;
+      line-height: 1;
+    }
+    .char-count {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: var(--wrong);
+      color: white;
+      font-size: 13px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-weight: 400;
+      z-index: 2;
+      display: none;
+    }
+    .char-count.show { display: block; }
+
+    .answer-buttons {
+      display: flex;
+      gap: 16px;
+      width: min(100%, 320px);
+      margin-bottom: 16px;
+    }
+    .ans-btn {
+      flex: 1;
+      height: 88px;
+      border: none;
+      border-radius: 24px;
+      font-size: 48px;
+      font-weight: 400;
+      cursor: pointer;
+      transition: transform 0.08s, box-shadow 0.08s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 5px 0 var(--shadow-color), 0 8px 16px rgba(0,0,0,0.12);
+    }
+    .ans-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 var(--shadow-color), 0 4px 8px rgba(0,0,0,0.12);
+    }
+    .btn-yes {
+      --shadow-color: var(--success-dark);
+      background: var(--success);
+    }
+    .btn-no {
+      --shadow-color: var(--wrong-dark);
+      background: var(--wrong);
+    }
+    .ans-hint {
+      position: absolute;
+      bottom: 8px;
+      font-size: 11px;
+      color: rgba(255,255,255,0.85);
+      font-weight: 400;
+    }
+
+    .progress-bar {
+      width: min(100%, 320px);
+      height: 8px;
+      background: rgba(0,0,0,0.06);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--primary-light));
+      transition: width 0.3s ease;
+      border-radius: 4px;
+    }
+
+    .session-stats {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: var(--text-light);
+      font-weight: 400;
+    }
+    .session-stats .right-dot { color: var(--success); font-weight: 400; }
+    .session-stats .wrong-dot { color: var(--wrong); font-weight: 400; }
+
+    /* ====== Summary ====== */
+    .summary-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px 0;
+    }
+    .summary-emoji {
+      font-size: 96px;
+      margin-bottom: 16px;
+      animation: popIn 0.5s ease;
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.5); opacity: 0; }
+      60% { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .summary-title {
+      font-size: 28px;
+      font-weight: 400;
+      color: var(--text);
+      margin-bottom: 24px;
+    }
+    .summary-stats {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .summary-stat {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 18px 22px;
+      box-shadow: var(--shadow);
+      min-width: 110px;
+    }
+    .summary-stat-num {
+      font-size: 32px;
+      font-weight: 400;
+      line-height: 1;
+    }
+    .summary-stat-label {
+      font-size: 13px;
+      color: var(--text-light);
+      margin-top: 6px;
+    }
+    .summary-stat.right .summary-stat-num { color: var(--success); }
+    .summary-stat.wrong .summary-stat-num { color: var(--wrong); }
+    .summary-stat.total .summary-stat-num { color: var(--primary); }
+
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      width: min(100%, 320px);
+    }
+    .action-btn {
+      flex: 1;
+      height: 54px;
+      border: none;
+      border-radius: 18px;
+      font-size: 16px;
+      font-weight: 400;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    .action-btn:active { transform: scale(0.97); }
+    .action-btn.primary {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 4px 12px rgba(255,140,66,0.4);
+    }
+    .action-btn.secondary {
+      background: var(--card);
+      color: var(--text);
+      box-shadow: var(--shadow);
+    }
+
+    /* ====== Empty state ====== */
+    .empty-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+    }
+    .empty-emoji {
+      font-size: 88px;
+      margin-bottom: 16px;
+    }
+    .empty-title {
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .empty-text {
+      font-size: 15px;
+      color: var(--text-light);
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    /* ====== Animations ====== */
+    @keyframes charPop {
+      0% { transform: scale(0.85); opacity: 0; }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .char-pop {
+      animation: charPop 0.25s ease;
+    }
+
+    @keyframes flashGood {
+      0% { background-color: var(--card); }
+      50% { background-color: rgba(16,185,129,0.2); }
+      100% { background-color: var(--card); }
+    }
+    @keyframes flashBad {
+      0% { background-color: var(--card); }
+      50% { background-color: rgba(239,68,68,0.2); }
+      100% { background-color: var(--card); }
+    }
+    .flash-good { animation: flashGood 0.3s ease; }
+    .flash-bad { animation: flashBad 0.3s ease; }
+
+    /* Scrollable list */
+    .scroll-area {
+      overflow-y: auto;
+      flex: 1;
+      -webkit-overflow-scrolling: touch;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- ====== Home Screen ====== -->
+    <div id="home-screen" class="screen active">
+      <div class="home-header">
+        <div class="home-emoji">📖</div>
+        <div class="home-title">認字小英雄</div>
+        <div class="home-subtitle">四五快讀 · 學生字練習</div>
+      </div>
+
+      <div class="home-stats">
+        <div class="stat-card">
+          <div class="stat-num" id="stat-total">0</div>
+          <div class="stat-label">總字數</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="stat-wrong">0</div>
+          <div class="stat-label">待溫習</div>
+          <div class="stat-sub" id="stat-wrong-sub">共 0 筆記錄</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="stat-lessons">0</div>
+          <div class="stat-label">課次</div>
+        </div>
+      </div>
+
+      <div class="mode-buttons">
+        <button class="mode-btn" data-mode="lesson">
+          <div class="mode-icon lesson">📚</div>
+          <div class="mode-text">
+            <div class="mode-title">按課出字</div>
+            <div class="mode-desc">逐課練習</div>
+          </div>
+        </button>
+        <button class="mode-btn" data-mode="all">
+          <div class="mode-icon all">🌟</div>
+          <div class="mode-text">
+            <div class="mode-title">所有字 <span class="mode-badge">30個</span></div>
+            <div class="mode-desc">隨機抽30個字</div>
+          </div>
+        </button>
+        <button class="mode-btn" data-mode="wrong">
+          <div class="mode-icon wrong">🔁</div>
+          <div class="mode-text">
+            <div class="mode-title">錯過的字 <span class="mode-badge" id="wrong-badge">0</span></div>
+            <div class="mode-desc">重溫所有錯過嘅字</div>
+          </div>
+        </button>
+      </div>
+
+      <div class="home-footer">
+        <button class="clear-btn" id="clear-wrong-btn" style="display:none">清除所有錯過的字</button>
+        <div>v1.0 · 適合4-5歲認字練習</div>
+      </div>
+    </div>
+
+    <!-- ====== Lesson Picker ====== -->
+    <div id="lesson-screen" class="screen">
+      <div class="topbar">
+        <button class="back-btn" data-go="home">‹</button>
+        <div class="topbar-title">選擇課次</div>
+      </div>
+      <div class="lesson-grid scroll-area" id="lesson-grid"></div>
+    </div>
+
+    <!-- ====== Game Screen ====== -->
+    <div id="game-screen" class="screen">
+      <div class="topbar">
+        <button class="back-btn" data-go="home">‹</button>
+        <div class="topbar-title" id="game-title">第二十一課</div>
+        <div class="progress-text" id="progress-text">1 / 15</div>
+      </div>
+      <div class="game-content">
+        <div class="session-stats">
+          <span><span class="right-dot" id="session-right">0</span> 答對</span>
+          <span><span class="wrong-dot" id="session-wrong">0</span> 答錯</span>
+        </div>
+        <div class="character-card" id="char-card">
+          <div class="character" id="char-display">字</div>
+          <div class="char-count" id="char-count"></div>
+        </div>
+        <div class="answer-buttons">
+          <button class="ans-btn btn-no" data-answer="no">
+            ✗
+          </button>
+          <button class="ans-btn btn-yes" data-answer="yes">
+            ✓
+          </button>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== Summary Screen ====== -->
+    <div id="summary-screen" class="screen">
+      <div class="topbar">
+        <div style="width:44px"></div>
+        <div class="topbar-title">練習完成</div>
+        <div style="width:44px"></div>
+      </div>
+      <div class="summary-content">
+        <div class="summary-emoji" id="summary-emoji">🎉</div>
+        <div class="summary-title" id="summary-title">完成晒!</div>
+        <div class="summary-stats">
+          <div class="summary-stat total">
+            <div class="summary-stat-num" id="summary-total">0</div>
+            <div class="summary-stat-label">總共</div>
+          </div>
+          <div class="summary-stat right">
+            <div class="summary-stat-num" id="summary-right">0</div>
+            <div class="summary-stat-label">答對</div>
+          </div>
+          <div class="summary-stat wrong">
+            <div class="summary-stat-num" id="summary-wrong">0</div>
+            <div class="summary-stat-label">答錯</div>
+          </div>
+        </div>
+        <div class="action-buttons">
+          <button class="action-btn secondary" data-go="home">回首頁</button>
+          <button class="action-btn primary" id="restart-btn">再玩一次</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== Empty state ====== -->
+    <div id="empty-screen" class="screen">
+      <div class="topbar">
+        <button class="back-btn" data-go="home">‹</button>
+        <div class="topbar-title">錯過的字</div>
+      </div>
+      <div class="empty-content">
+        <div class="empty-emoji">✨</div>
+        <div class="empty-title">未有任何錯過的字</div>
+        <div class="empty-text">喺「按課出字」或「所有字」<br>揀 ✗ 嘅字會全部記錄喺度</div>
+        <button class="action-btn primary" data-go="home" style="width:200px">返去練習</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function() {
+    'use strict';
+
+    // ====== Lesson data ======
+    const LESSONS = {
+      21: ['蟲','把','鵝','河','禮','背','拿','裡','後','謝','邊','貌','班','幼','園'],
+      22: ['照','婆','甜','夢','老','盒','尺','刀'],
+      23: ['時','正','文','具','筆','畫','長','放'],
+      24: ['用','總','尾','巴','玉','尖','竹','苗'],
+      25: ['聽','話','猴','猩','給','進','告','電'],
+      26: ['訴','念','飯','乖','想','面','住','前'],
+      27: ['從','同','沒','送','果','工','廠','產'],
+      28: ['動','關','找','按','年','節','桃','荷'],
+      29: ['菊','梅','冷','它','怕','躲','勇','敢'],
+      30: ['堆','仗','柳','農','民','伯','種','最'],
+      31: ['片','吹','澆','燕','睡','醒','蛙','呱','南','椅','坐','身','吧','桌','步','抱'],
+      32: ['摔','聲','誰','呢','認','原','痛','喊'],
+      33: ['狼','啦','趕','救','假','掉','路','碰'],
+      34: ['哪','呀','兩','逃','走','她','點','音'],
+      35: ['可','伸','縫','夾','根','棍','丟','灰'],
+      36: ['蘿','蔔','熟','拔','拉','鼠','咕','咚'],
+      37: ['倒','抬','晚','左','右','怎','麼','辦'],
+      38: ['知','道','午','這','座','洞','什','害'],
+      39: ['付','頂','角','死','撲','期','帶','分'],
+      40: ['清','今','昨','光','陰','錯','指','拇']
+    };
+
+    const ALL_WORDS = Object.values(LESSONS).flat();
+    const ALL_PICK_COUNT = 30;
+    const WRONG_MAX = Infinity;  // 記錄所有錯過嘅字,冇上限
+    const STORAGE_KEY = 'wordApp.v1';
+
+    // ====== Storage ======
+    function loadState() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { wrong: [] };
+      } catch(e) { return { wrong: [] }; }
+    }
+    function saveState(s) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch(e) {}
+    }
+    function getWrong() { return loadState().wrong || []; }
+    function setWrong(arr) {
+      const s = loadState();
+      s.wrong = WRONG_MAX === Infinity ? arr : arr.slice(-WRONG_MAX);
+      saveState(s);
+    }
+    function addWrong(entry) {
+      // 每次錯過都記一筆,不重複去除(FIFO,最多保留20筆)
+      const list = getWrong();
+      list.push({ ...entry, ts: Date.now() });
+      setWrong(list);
+    }
+    function removeWrong(word) {
+      // 答啱之後,清除該字所有錯過記錄
+      setWrong(getWrong().filter(e => e.word !== word));
+    }
+    function getUniqueWrong() {
+      // 將 20 筆記錄聚合成唔同嘅字,統計每個字錯過嘅次數
+      const counts = {};
+      const lessons = {};
+      for (const e of getWrong()) {
+        counts[e.word] = (counts[e.word] || 0) + 1;
+        if (e.lesson) lessons[e.word] = e.lesson;
+      }
+      return Object.keys(counts).map(word => ({
+        word,
+        count: counts[word],
+        lesson: lessons[word] || findLessonOf(word)
+      }));
+    }
+    function clearWrong() { setWrong([]); }
+
+    function findLessonOf(word) {
+      for (const [ln, words] of Object.entries(LESSONS)) {
+        if (words.includes(word)) return +ln;
+      }
+      return null;
+    }
+
+    // ====== Game state ======
+    let state = {
+      mode: null,    // 'lesson' | 'all' | 'wrong'
+      lesson: null,
+      queue: [],
+      index: 0,
+      right: 0,
+      wrong: 0,
+    };
+
+    // ====== Utils ======
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+    function chineseNum(n) {
+      const map = {1:'一',2:'二',3:'三',4:'四',5:'五',6:'六',7:'七',8:'八',9:'九'};
+      if (n < 10) return map[n];
+      if (n < 20) return '十' + (n - 10 === 0 ? '' : map[n - 10]);
+      if (n < 30) return '二十' + (n - 20 === 0 ? '' : map[n - 20]);
+      if (n < 40) return '三十' + (n - 30 === 0 ? '' : map[n - 30]);
+      if (n < 50) return '四十' + (n - 40 === 0 ? '' : map[n - 40]);
+      return String(n);
+    }
+    function lessonTitle(n) {
+      return `第二${chineseNum(n)}課`;
+    }
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const el = document.getElementById(id);
+      if (el) el.classList.add('active');
+    }
+
+    // ====== Home ======
+    function updateHome() {
+      const wrong = getWrong();
+      const unique = getUniqueWrong();
+      document.getElementById('stat-total').textContent = ALL_WORDS.length;
+      document.getElementById('stat-wrong').textContent = unique.length;
+      document.getElementById('stat-wrong-sub').textContent = `共 ${wrong.length} 筆記錄`;
+      document.getElementById('stat-lessons').textContent = Object.keys(LESSONS).length;
+      const badge = document.getElementById('wrong-badge');
+      badge.textContent = `${unique.length}個`;
+      document.getElementById('clear-wrong-btn').style.display = wrong.length > 0 ? 'inline-block' : 'none';
+    }
+
+    // ====== Lesson grid ======
+    function buildLessonGrid() {
+      const grid = document.getElementById('lesson-grid');
+      grid.innerHTML = '';
+      Object.keys(LESSONS)
+        .map(Number)
+        .sort((a,b) => a-b)
+        .forEach(num => {
+          const words = LESSONS[num];
+          const book = num < 31 ? 'b3' : 'b4';
+          const bookLabel = num < 31 ? '三' : '四';
+          const btn = document.createElement('button');
+          btn.className = 'lesson-card';
+          btn.innerHTML = `
+            <div class="lesson-num">第<span class="book-tag ${book}">${bookLabel}冊</span></div>
+            <div class="lesson-label">${num}</div>
+            <div class="lesson-count">${words.length}字</div>
+          `;
+          btn.addEventListener('click', () => startLesson(num));
+          grid.appendChild(btn);
+        });
+    }
+
+    // ====== Start games ======
+    function startLesson(num) {
+      state = {
+        mode: 'lesson',
+        lesson: num,
+        queue: shuffle(LESSONS[num]),
+        index: 0, right: 0, wrong: 0
+      };
+      document.getElementById('game-title').textContent = lessonTitle(num);
+      showScreen('game-screen');
+      renderChar();
+    }
+    function startAll() {
+      const words = shuffle(ALL_WORDS).slice(0, ALL_PICK_COUNT);
+      state = { mode: 'all', lesson: null, queue: words, index: 0, right: 0, wrong: 0 };
+      document.getElementById('game-title').textContent = '所有字';
+      showScreen('game-screen');
+      renderChar();
+    }
+    function startWrong() {
+      const unique = getUniqueWrong();
+      if (unique.length === 0) {
+        showScreen('empty-screen');
+        return;
+      }
+      state = {
+        mode: 'wrong',
+        lesson: null,
+        queue: shuffle(unique),
+        index: 0, right: 0, wrong: 0
+      };
+      document.getElementById('game-title').textContent = '錯過的字';
+      showScreen('game-screen');
+      renderChar();
+    }
+
+    // ====== Render ======
+    function renderChar() {
+      if (state.index >= state.queue.length) {
+        showSummary();
+        return;
+      }
+      const cur = state.queue[state.index];
+      const word = typeof cur === 'string' ? cur : cur.word;
+      const count = (cur && typeof cur === 'object' && cur.count) ? cur.count : 0;
+      const el = document.getElementById('char-display');
+      el.textContent = word;
+      // pop animation
+      el.classList.remove('char-pop');
+      void el.offsetWidth;
+      el.classList.add('char-pop');
+
+      // Show count badge in wrong mode
+      const badge = document.getElementById('char-count');
+      if (state.mode === 'wrong' && count > 0) {
+        badge.textContent = `錯過 ${count} 次`;
+        badge.classList.add('show');
+      } else {
+        badge.classList.remove('show');
+      }
+
+      const total = state.queue.length;
+      document.getElementById('progress-text').textContent = `${state.index + 1} / ${total}`;
+      document.getElementById('progress-fill').style.width = `${(state.index / total) * 100}%`;
+      document.getElementById('session-right').textContent = state.right;
+      document.getElementById('session-wrong').textContent = state.wrong;
+    }
+
+    // ====== Answer ======
+    function answer(isRight) {
+      if (state.index >= state.queue.length) return;
+      const cur = state.queue[state.index];
+      const word = typeof cur === 'string' ? cur : cur.word;
+
+      // Flash card
+      const card = document.getElementById('char-card');
+      card.classList.remove('flash-good', 'flash-bad');
+      void card.offsetWidth;
+      card.classList.add(isRight ? 'flash-good' : 'flash-bad');
+
+      if (isRight) {
+        state.right++;
+        if (state.mode === 'wrong') {
+          // 答啱:清除該字所有錯過記錄
+          removeWrong(word);
+        }
+      } else {
+        state.wrong++;
+        // 不論邊個 mode,錯過都記錄(可能因為 localStorage 已滿而被自動覆蓋)
+        const lesson = state.mode === 'lesson' ? state.lesson : findLessonOf(word);
+        addWrong({ word, lesson });
+      }
+
+      // Brief delay so user sees the flash, then advance
+      setTimeout(() => {
+        state.index++;
+        renderChar();
+      }, 180);
+    }
+
+    // ====== Summary ======
+    function showSummary() {
+      const total = state.right + state.wrong;
+      document.getElementById('summary-total').textContent = total;
+      document.getElementById('summary-right').textContent = state.right;
+      document.getElementById('summary-wrong').textContent = state.wrong;
+      const rate = total > 0 ? state.right / total : 0;
+      let emoji = '🎉', title = '完成晒!';
+      if (total === 0) { emoji = '🤔'; title = '冇答過任何題'; }
+      else if (rate < 0.5) { emoji = '💪'; title = '繼續加油!'; }
+      else if (rate < 0.8) { emoji = '👍'; title = '做得不錯!'; }
+      else if (rate < 1)   { emoji = '🌟'; title = '好叻呀!'; }
+      else                 { emoji = '🏆'; title = '完美!全部答啱!'; }
+      document.getElementById('summary-emoji').textContent = emoji;
+      document.getElementById('summary-title').textContent = title;
+      showScreen('summary-screen');
+    }
+
+    function restart() {
+      if (state.mode === 'lesson') startLesson(state.lesson);
+      else if (state.mode === 'all') startAll();
+      else if (state.mode === 'wrong') startWrong();
+    }
+
+    // ====== Event wiring ======
+    function goHome() {
+      updateHome();
+      showScreen('home-screen');
+    }
+
+    document.addEventListener('click', (e) => {
+      const t = e.target.closest('[data-mode], [data-go], [data-answer], #restart-btn, #clear-wrong-btn');
+      if (!t) return;
+
+      if (t.dataset.mode) {
+        const m = t.dataset.mode;
+        if (m === 'lesson') showScreen('lesson-screen');
+        else if (m === 'all') startAll();
+        else if (m === 'wrong') startWrong();
+        return;
+      }
+      if (t.dataset.go) {
+        if (t.dataset.go === 'home') goHome();
+        return;
+      }
+      if (t.dataset.answer) {
+        answer(t.dataset.answer === 'yes');
+        return;
+      }
+      if (t.id === 'restart-btn') {
+        restart();
+        return;
+      }
+      if (t.id === 'clear-wrong-btn') {
+        if (confirm('確定要清除所有錯過嘅字？')) {
+          clearWrong();
+          updateHome();
+        }
+        return;
+      }
+    });
+
+    // Keyboard shortcuts (desktop testing)
+    document.addEventListener('keydown', (e) => {
+      if (!document.getElementById('game-screen').classList.contains('active')) return;
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault(); answer(true);
+      } else if (e.key === 'ArrowLeft' || e.key === 'x' || e.key === 'X') {
+        e.preventDefault(); answer(false);
+      }
+    });
+
+    // Prevent double-tap zoom on iOS
+    document.addEventListener('touchend', (e) => {
+      if (e.target.closest('button')) e.preventDefault();
+    }, { passive: false });
+
+    // ====== Init ======
+    function isStorageAvailable() {
+      try {
+        const test = '__test_' + Math.random();
+        localStorage.setItem(test, test);
+        localStorage.removeItem(test);
+        return true;
+      } catch(e) { return false; }
+    }
+    function showStorageWarning() {
+      if (document.getElementById('storage-warning')) return;
+      const div = document.createElement('div');
+      div.id = 'storage-warning';
+      div.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#EF4444;color:white;padding:10px 16px;font-size:13px;text-align:center;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,0.2);font-family:sans-serif';
+      div.innerHTML = '⚠️ 偵測到無痕/私隱模式,錯過記錄無法儲存。請用正常模式開啓。';
+      document.body.prepend(div);
+    }
+
+    if (!isStorageAvailable()) {
+      showStorageWarning();
+    }
+
+    buildLessonGrid();
+    updateHome();
+
+    // Expose for debugging
+    window.__app = { LESSONS, state, getWrong, getUniqueWrong, setWrong, clearWrong, addWrong, removeWrong };
+  })();
+  </script>
+</body>
+</html>
