@@ -265,11 +265,11 @@
     updateWrongPanel();
   }
 
-  // 顯示選單 (已修復 result-view 沒被隱藏的 Bug)
+  // 顯示選單
   function showMenu() {
     document.getElementById('menu-view').classList.remove('hidden');
     document.getElementById('test-view').classList.add('hidden');
-    document.getElementById('result-view').classList.add('hidden'); // 正確將結果頁隱藏
+    document.getElementById('result-view').classList.add('hidden');
     updateMenu();
   }
 
@@ -310,7 +310,11 @@
   function answer(isCorrect) {
     const currentWord = currentList[currentIndex];
     
-    if (!isCorrect) {
+    if (isCorrect) {
+      // 答對：增加正確計數
+      correctCount++;
+    } else {
+      // 答錯：加入錯字庫
       currentWrong.push(currentWord);
 
       // 如果是在 "All Word List" 模式下答錯，即時將錯字放入全局錯字庫並更新 Panel
@@ -318,8 +322,6 @@
         wrongWords.push(currentWord);
         updateWrongPanel();
       }
-    } else {
-      correctCount++; // 答對時增加計數
     }
     
     currentIndex++;
