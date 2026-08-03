@@ -265,11 +265,11 @@
     updateWrongPanel();
   }
 
-  // 顯示選單
+  // 顯示選單 (已修復 result-view 沒被隱藏的 Bug)
   function showMenu() {
     document.getElementById('menu-view').classList.remove('hidden');
     document.getElementById('test-view').classList.add('hidden');
-    document.getElementById('result-view').classList.remove('hidden');
+    document.getElementById('result-view').classList.add('hidden'); // 正確將結果頁隱藏
     updateMenu();
   }
 
@@ -292,6 +292,7 @@
 
     document.getElementById('menu-view').classList.add('hidden');
     document.getElementById('test-view').classList.remove('hidden');
+    document.getElementById('result-view').classList.add('hidden');
     showWord();
   }
 
@@ -317,6 +318,8 @@
         wrongWords.push(currentWord);
         updateWrongPanel();
       }
+    } else {
+      correctCount++; // 答對時增加計數
     }
     
     currentIndex++;
@@ -333,7 +336,7 @@
 
     document.getElementById('test-view').classList.add('hidden');
     document.getElementById('result-view').classList.remove('hidden');
-    document.getElementById('result-text').innerText = `你答對了 ${correctCount} 個字！`;
+    document.getElementById('result-text').innerText = `你答對了 ${correctCount} / ${currentList.length} 個字！`;
   }
 
   // 初始化畫面
