@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<!-- 設定為手機及平板比例，防止縮放 -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Adjectives 測試 App</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    background-color: #f4f7f6;
+    box-sizing: border-box;
+  }
+
+  /* 主容器：採用 Flex 佈局將 App 與 側邊欄 (Panel) 左右排列 */
+  #main-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    max-width: 950px;
+    gap: 20px;
+  }
+
+  /* 左側 App 區域 */
+  #app {
+    flex: 1;
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    box-sizing: border-box;
+    text-align: center;
+  }
+
+  /* 右側 錯字 Panel 區域 */
+  #wrong-panel {
+    width: 280px;
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #wrong-panel h2 {
+    margin-top: 0;
+    font-size: 1.3rem;
+    color: #dc3545;
+    border-bottom: 2px solid #f4f7f6;
+    padding-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  #wrong-count-badge {
+    background-color: #dc3545;
+    color: white;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 1rem;
+  }
+
+  #wrong-word-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 15px 0;
+    max-height: 350px;
+    overflow-y: auto;
+    text-align: left;
+    flex: 1;
+  }
+
+  #wrong-word-list li {
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    background-color: #fff5f5;
+    color: #c53030;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 500;
+  }
+
+  /* 匯出按鈕樣式 */
+  .btn-export {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: white;
+    background-color: #28a745;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: background-color 0.2s, transform 0.1s;
+  }
+  .btn-export:hover { background-color: #218838; }
+  .btn-export:active { transform: translateY(1px); }
+  .btn-export:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
+
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 20px;
+    margin: 15px 0;
+    font-size: 1.5rem;
+    color: white;
+    background-color: #007bff;
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+  .btn:active { background-color: #0056b3; transform: translateY(2px); }
+  .btn:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
+ 
+  .btn-tick { background-color: #28a745; font-size: 4rem; flex: 1; margin-right: 10px; border-radius: 20px;}
+  .btn-cross { background-color: #dc3545; font-size: 4rem; flex: 1; margin-left: 10px; border-radius: 20px;}
+  .btn-tick:active { background-color: #1e7e34; }
+  .btn-cross:active { background-color: #bd2130; }
+ 
+  .button-row { display: flex; justify-content: space-between; margin-top: 60px; }
+  .word-display { font-size: 4.5rem; font-weight: bold; margin: 50px 0; color: #333; word-break: break-word; }
+  .hidden { display: none !important; }
+  h1 { color: #333; font-size: 2rem;}
+  .progress { font-size: 1.5rem; color: #666; margin-bottom: 20px; }
+
+  /* 響應式設計：如果螢幕太窄（如手機直立），自動轉為上下排列 */
+  @media (max-width: 650px) {
+    #main-container {
+      flex-direction: column;
+    }
+    #wrong-panel {
+      width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div id="main-container">
+  <!-- 主測試 App 區域 -->
+  <div id="app">
+    <!-- 首頁 (Menu) -->
+    <div id="menu-view">
+      <h1>Adjectives 單詞測試</h1>
+      <button class="btn" onclick="startTest('all')">All Word List</button>
+      <button class="btn" id="btn-wrong" onclick="startTest('wrong')">Wrong Word Revision</button>
+    </div>
+
+    <!-- 測試頁 (Test) -->
+    <div id="test-view" class="hidden">
+      <div class="progress" id="progress-text"></div>
+      <div class="word-display" id="word-display"></div>
+      <div class="button-row">
+        <button class="btn btn-tick" onclick="answer(true)">✓</button>
+        <button class="btn btn-cross" onclick="answer(false)">✗</button>
+      </div>
+    </div>
+
+    <!-- 結果頁 (Result) -->
+    <div id="result-view" class="hidden">
+      <h1>測試完成！</h1>
+      <p class="word-display" id="result-text" style="font-size: 2.5rem;"></p>
+      <button class="btn" onclick="showMenu()">返回主目錄</button>
+    </div>
+  </div>
+
+  <!-- 側邊欄 Panel：即時顯示錯字數量與列表 -->
+  <div id="wrong-panel">
+    <h2>
+      錯字庫
+      <span id="wrong-count-badge">0</span>
+    </h2>
+    <ul id="wrong-word-list">
+      <li style="background: none; color: #999; font-size: 0.95rem; padding-left: 0;">暫無錯字記錄</li>
+    </ul>
+    <button class="btn-export" id="btn-export" onclick="exportWrongWordsCSV()" disabled>📊 匯出錯字表 (.csv)</button>
+  </div>
+</div>
+
+<script>
+  // 從 PDF 提取的所有 86 個形容詞
+  const allWords = [
+    'black', 'curly', 'purple', 'blue', 'straight', 'red', 'brown', 'blond(e)', 'white', 'green', 'yellow', 'pink',
+    'afraid', 'happy', 'clever', 'frightened', 'sad', 'funny', 'scary', 'surprised', 'brilliant', 'brave', 'naughty', 'careful', 'angry', 'silly', 'famous', 'sweet',
+    'bad', 'beautiful', 'fine', 'terrible', 'pretty', 'great', 'good', 'ugly', 'easy', 'difficult', 'correct', 'wrong', 'favourite', 'nice', 'boring', 'exciting',
+    'big', 'little', 'long', 'huge', 'small', 'new', 'tall', 'short', 'old', 'young', 'double', 'different',
+    'asleep', 'ill', 'cool', 'awake', 'sick', 'cloudy', 'busy', 'thirsty', 'sunny', 'closed', 'tired', 'windy', 'hot', 'wet', 'quick', 'hungry', 'dirty', 'slow', 'loud', 'dangerous', 'quiet', 'fat', 'safe', 'round', 'strong', 'weak', 'thin', 'top', 'bottom', 'fair'
+  ];
+
+  let wrongWords = [];
+ 
+  let currentList = [];
+  let currentIndex = 0;
+  let correctCount = 0;
+  let currentWrong = [];
+  let isWrongRevisionMode = false;
+
+  // 洗牌演算法 (將單詞次序打亂)
+  function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
+  // 即時更新右側 Panel 的錯字資料及匯出按鈕狀態
+  function updateWrongPanel() {
+    const listElement = document.getElementById('wrong-word-list');
+    const badgeElement = document.getElementById('wrong-count-badge');
+    const exportBtn = document.getElementById('btn-export');
+    
+    badgeElement.innerText = wrongWords.length;
+    listElement.innerHTML = '';
+
+    if (wrongWords.length === 0) {
+      listElement.innerHTML = '<li style="background: none; color: #999; font-size: 0.95rem; padding-left: 0;">暫無錯字記錄</li>';
+      exportBtn.disabled = true;
+    } else {
+      wrongWords.forEach(word => {
+        const li = document.createElement('li');
+        li.innerText = word;
+        listElement.appendChild(li);
+      });
+      exportBtn.disabled = false;
+    }
+  }
+
+  // 匯出錯字檔 (.csv)
+  function exportWrongWordsCSV() {
+    if (wrongWords.length === 0) return;
+
+    // 建立 CSV 內容 (加入 \uFEFF 防止 Excel 開啟時亂碼)
+    let csvContent = "\uFEFFNo.,Word,Category\n";
+    wrongWords.forEach((word, index) => {
+      csvContent += `${index + 1},"${word}",Adjective\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `wrong_words_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // 更新選單按鈕狀態
+  function updateMenu() {
+    document.getElementById('btn-wrong').innerText = `Wrong Word Revision (${wrongWords.length})`;
+    document.getElementById('btn-wrong').disabled = wrongWords.length === 0;
+    updateWrongPanel();
+  }
+
+  // 顯示選單
+  function showMenu() {
+    document.getElementById('menu-view').classList.remove('hidden');
+    document.getElementById('test-view').classList.add('hidden');
+    document.getElementById('result-view').classList.remove('hidden');
+    updateMenu();
+  }
+
+  // 開始測試
+  function startTest(mode) {
+    if (mode === 'all') {
+      currentList = [...allWords];
+      isWrongRevisionMode = false;
+    } else if (mode === 'wrong') {
+      currentList = [...wrongWords];
+      isWrongRevisionMode = true;
+    }
+
+    if (currentList.length === 0) return;
+
+    shuffleArray(currentList);
+    currentIndex = 0;
+    correctCount = 0;
+    currentWrong = [];
+
+    document.getElementById('menu-view').classList.add('hidden');
+    document.getElementById('test-view').classList.remove('hidden');
+    showWord();
+  }
+
+  // 顯示下一個字
+  function showWord() {
+    if (currentIndex < currentList.length) {
+      document.getElementById('word-display').innerText = currentList[currentIndex];
+      document.getElementById('progress-text').innerText = `${currentIndex + 1} / ${currentList.length}`;
+    } else {
+      endTest();
+    }
+  }
+
+  // 處理作答 (Tick 或 Cross)
+  function answer(isCorrect) {
+    const currentWord = currentList[currentIndex];
+    
+    if (!isCorrect) {
+      currentWrong.push(currentWord);
+
+      // 如果是在 "All Word List" 模式下答錯，即時將錯字放入全局錯字庫並更新 Panel
+      if (!isWrongRevisionMode && !wrongWords.includes(currentWord)) {
+        wrongWords.push(currentWord);
+        updateWrongPanel();
+      }
+    }
+    
+    currentIndex++;
+    showWord();
+  }
+
+  // 測試結束
+  function endTest() {
+    if (isWrongRevisionMode) {
+      // 在溫習模式下，測試完結後將新的錯字覆蓋舊的錯字列表
+      wrongWords = [...currentWrong];
+      updateWrongPanel();
+    }
+
+    document.getElementById('test-view').classList.add('hidden');
+    document.getElementById('result-view').classList.remove('hidden');
+    document.getElementById('result-text').innerText = `你答對了 ${correctCount} 個字！`;
+  }
+
+  // 初始化畫面
+  updateMenu();
+
+</script>
+</body>
+</html>
