@@ -1,0 +1,359 @@
+
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<!-- 設定為手機及平板比例，防止縮放 -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Noun 4 測試 App</title>
+<style>
+  body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    margin: 0; 
+    padding: 0; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    min-height: 100vh; 
+    background-color: #f4f7f6; 
+  }
+  #app { 
+    width: 100%; 
+    max-width: 600px; 
+    padding: 20px; 
+    box-sizing: border-box; 
+    text-align: center; 
+  }
+  .btn { 
+    display: block; 
+    width: 100%; 
+    padding: 20px; 
+    margin: 15px 0; 
+    font-size: 1.5rem; 
+    color: white; 
+    background-color: #007bff; 
+    border: none; 
+    border-radius: 15px; 
+    cursor: pointer; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+  }
+  .btn:active { background-color: #0056b3; transform: translateY(2px); }
+  .btn:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
+  
+  .btn-tick { background-color: #28a745; font-size: 4rem; flex: 1; margin-right: 10px; border-radius: 20px;}
+  .btn-cross { background-color: #dc3545; font-size: 4rem; flex: 1; margin-left: 10px; border-radius: 20px;}
+  .btn-tick:active { background-color: #1e7e34; }
+  .btn-cross:active { background-color: #bd2130; }
+  
+  .button-row { display: flex; justify-content: space-between; margin-top: 60px; }
+  .word-display { font-size: 4rem; font-weight: bold; margin: 60px 0; color: #333; }
+  .hidden { display: none !important; }
+  h1 { color: #333; font-size: 2rem;}
+  .progress { font-size: 1.5rem; color: #666; margin-bottom: 20px; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- 首頁 (Menu) -->
+  <div id="menu-view">
+    <h1>Noun 4 單詞測試</h1>
+    <button class="btn" onclick="startTest('all')">All Word List</button>
+    <button class="btn" id="btn-wrong" onclick="startTest('wrong')">Wrong Word Revision</button>
+  </div>
+
+  <!-- 測試頁 (Test) -->
+  <div id="test-view" class="hidden">
+    <div class="progress" id="progress-text"></div>
+    <div class="word-display" id="word-display"></div>
+    <div class="button-row">
+      <button class="btn btn-tick" onclick="answer(true)">✓</button>
+      <button class="btn btn-cross" onclick="answer(false)">✗</button>
+    </div>
+  </div>
+
+  <!-- 結果頁 (Result) -->
+  <div id="result-view" class="hidden">
+    <h1>測試完成！</h1>
+    <p class="word-display" id="result-text" style="font-size: 2.5rem;"></p>
+    <button class="btn" onclick="showMenu()">返回主目錄</button>
+  </div>
+</div>
+
+<script>
+  // 替換為 Noun 4 的所有名詞
+  const allWords = [
+    "noodles", "nose", "number", "nurse", "onion", "page", "painting", "pair", "pancake", "panda",
+    "parent", "park", "parrot", "part", "party", "pasta", "pea", "pear", "pen", "pencil",
+    "penguin", "person/people", "pet", "photo", "piano", "picnic", "picture", "pie", "pineapple", "pirate",
+    "place", "plane", "plate", "player", "playground", "polar bear", "pool", "pop star", "poster", "potato",
+    "practice", "present", "puppy", "question", "rabbit", "radio", "rainbow", "rice", "ride", "river",
+    "road", "robot", "rock", "roller skates", "roller skating", "roof", "room", "rug", "ruler", "salad",
+    "sand", "sandwich", "sauce", "sausage", "scarf", "school", "sea", "seat", "sentence", "shape",
+    "shark", "sheep", "shell", "ship", "shirt", "shoe", "shopping", "shorts", "shoulder", "shower"
+  ];
+
+  let wrongWords = []; 
+  
+  let currentList = [];
+  let currentIndex = 0;
+  let correctCount = 0;
+  let currentWrong = [];
+  let isWrongRevisionMode = false;
+
+  // 洗牌演算法 (將單詞次序打亂)
+  function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
+  // 更新選單按鈕狀態
+  function updateMenu() {
+    document.getElementById('btn-wrong').innerText = `Wrong Word Revision (${wrongWords.length})`;
+    document.getElementById('btn-wrong').disabled = wrongWords.length === 0;
+  }
+
+  // 顯示選單
+  function showMenu() {
+    document.getElementById('menu-view').classList.remove('hidden');
+    document.getElementById('test-view').classList.add('hidden');
+    document.getElementById('result-view').classList.add('hidden');
+    updateMenu();
+  }
+
+  // 開始測試
+  function startTest(mode) {
+    if (mode === 'all') {
+      currentList = [...allWords];
+      isWrongRevisionMode = false;
+    } else if (mode === 'wrong') {
+      currentList = [...wrongWords];
+      isWrongRevisionMode = true;
+    }
+
+    if (currentList.length === 0) return;
+
+    shuffleArray(currentList);
+    currentIndex = 0;
+    correctCount = 0;
+    currentWrong = [];
+
+    document.getElementById('menu-view').classList.add('hidden');
+    document.getElementById('test-view').classList.remove('hidden');
+    showWord();
+  }
+
+  // 顯示下一個字
+  function showWord() {
+    if (currentIndex < currentList.length) {
+      document.getElementById('word-display').innerText = currentList[currentIndex];
+      document.getElementById('progress-text').innerText = `${currentIndex + 1} / ${currentList.length}`;
+    } else {
+      endTest();
+    }
+  }
+
+  // 處理作答 (Tick 或 Cross)
+  function answer(isCorrect) {
+    if (!isCorrect) {
+      currentWrong.push(currentList[currentIndex]);
+    } else {
+      correctCount++;
+    }
+    currentIndex++;
+    showWord();
+  }
+
+  // 測試結束
+  function endTest() {
+    if (isWrongRevisionMode) {
+      // 在溫習模式下，將新的錯字覆蓋舊的錯字列表
+      wrongWords = [...currentWrong];
+    } else {
+      // 在 All List 模式下，加入新的錯字並防止重複
+      currentWrong.forEach(word => {
+        if (!wrongWords.includes(word)) {
+          wrongWords.push(word);
+        }
+      });
+    }
+
+    document.getElementById('test-view').classList.add('hidden');
+    document.getElementById('result-view').classList.remove('hidden');
+    document.getElementById('result-text').innerText = `你答對了 ${correctCount} 個字！`;
+  }
+
+  // 初始化畫面
+  updateMenu();
+
+</script>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+
+</body>
+</html>
+</html>
+</body>
+</html>
+
+</body>
+</html>
+
+</body>
+</html>
+</html>
+
+
+</body>
+</html>
+
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+
+
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+
+</body>
+</html>
+</body>
+</html>
+
+</body>
+</html>
+</body>
+</html>
+
+</body>
+</html>
+</body>
+</html>
+
+
+</body>
+</html>
+</body>
+</html>
+
+</body>
+</html>
+</body>
+</html>
+
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+
+</body>
+</html>
+
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+
+
+</body>
+</html>
+
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+
+
+
+</body>
+</html>
+
+</body>
+</html>
+</body>
+</html>
+
+</body>
+</html>
+
+</body>
+</html>
+</html>
+
+</body>
+</html>
+</html>
+</body>
+</html>
+
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+</body>
+</html>
+
+
+
+
+</body>
+</html>
